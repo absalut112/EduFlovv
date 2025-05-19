@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Оценки учеников</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 40px;
+      text-align: center;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 16px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 80%;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #ddd;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Добавление оценок учеников</h1>
+
+  <p>
+    Имя ученика:
+    <input id="studentName" placeholder="Алия">
+  </p>
+  <p>
+    Оценки (через запятую, от 0 до 8):
+    <input id="studentGrades" placeholder="6,8,7">
+  </p>
+
+  <button onclick="addStudent()">Добавить ученика</button>
+
+  <div class="error" id="errorMsg"></div>
+
+  <table id="gradesTable">
+    <thead>
+      <tr>
+        <th>Имя ученика</th>
+        <th>Оценки</th>
+        <th>Среднее значение</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Сюда будут добавляться ученики -->
+    </tbody>
+  </table>
+
+  <script>
+    function addStudent() {
+      const name = document.getElementById("studentName").value.trim();
+      const gradeInput = document.getElementById("studentGrades").value.trim();
+      const errorDiv = document.getElementById("errorMsg");
+
+      if (!name || !gradeInput) {
+        errorDiv.textContent = "❌ Пожалуйста, введите имя и оценки.";
+        return;
+      }
+
+      const rawGrades = gradeInput.split(",").map(s => s.trim());
+      const grades = [];
+
+      for (let g of rawGrades) {
+        const num = parseFloat(g);
+        if (isNaN(num) || num < 0 || num > 8) {
+          errorDiv.textContent = "❌ Оценки должны быть числами от 0 до 8.";
+          return;
+        }
+        grades.push(num);
+      }
+
+      const average = (grades.reduce((a, b) => a + b, 0) / grades.length).toFixed(2);
+
+      const tableBody = document.getElementById("gradesTable").querySelector("tbody");
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${name}</td>
+        <td>${grades.join(", ")}</td>
+        <td><b>${average}</b></td>
+      `;
+
+      tableBody.appendChild(row);
+
+      // Очистка полей
+      document.getElementById("studentName").value = "";
+      document.getElementById("studentGrades").value = "";
+      errorDiv.textContent = "";
+    }
+  </script>
+</body>
+</html>
