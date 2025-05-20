@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Оценки учеников</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 40px;
+      text-align: center;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 16px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 80%;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #ddd;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+    .delete-btn {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .export-btn {
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ученики и их оценки</h1>
+
+  <p>
+    Имя ученика:
+    <input id="studentName" placeholder="Мадина">
+  </p>
+  <p>
+    Оценки (через запятую, от 0 до 8):
+    <input id="studentGrades" placeholder="6,8,7">
+  </p>
+
+  <button onclick="addStudent()">Добавить ученика</button>
+  <div class="error" id="errorMsg"></div>
+
+  <table id="gradesTable">
+    <thead>
+      <tr>
+        <th>Имя</th>
+        <th>Оценки</th>
+        <th>Среднее</th>
+        <th>Действие</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button class="export-btn" onclick="exportToExcel()">📤 Экспорт в Excel</button>
+
+  <script>
+    let students = [];
+
+    function quickSort(arr) {
+      if (arr.length <= 1) return arr;
+      const pivot = arr[arr.length - 1];
+      const left = [], right = [];
+      for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i].name.toLowerCase() < pivot.name.toLowerCase()) {
+          left.push(arr[i]);
+        } else {
+          right.push(arr[i]);
+        }
+      }
+      return [...quickSort(left), pivot, ...quickSort(right)];
+    }
+
+    function addStudent() {
+      const name = document.getElementById("studentName").value.trim();
+      const gradesInput = document.getElementById("studentGrades").value.trim();
+      const errorDiv = document.getElementById("errorMsg");
+
+      if (!name || !gradesInput) {
+        errorDiv.textContent = "❌ Введите имя и оценки.";
+        return;
+      }
+
+      const gradeList = gradesInput.split(",").map(s => s.trim());
+      const grades = [];
+
+      for (let val of gradeList) {
+        const num = parseFloat(val);
+        if (isNaN(num) || num < 0 || num > 8) {
+          errorDiv.textContent = "❌ Оценки должны быть числами от 0 до 8.";
+          return;
+        }
+        grades.push(num);
+      }
+
+      const average = (grades.reduce((a, b) => a + b, 0) / grades.length).toFixed(2);
+
+      students.push({ name, grades, average });
+      students = quickSort(students); // Сортировка по имени
+      errorDiv.textContent = "";
+      document.getElementById("studentName").value = "";
+      document.getElementById("studentGrades").value = "";
+      renderTable();
+    }
+
+    function deleteStudent(index) {
+      students.splice(index, 1);
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.querySelector("#gradesTable tbody");
+      tbody.innerHTML = "";
+
+      students.forEach((student, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${student.name}</td>
+          <td>${student.grades.join(", ")}</td>
+          <td><b>${student.average}</b></td>
+          <td><button class="delete-btn" onclick="deleteStudent(${index})">Удалить</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function exportToExcel() {
+      let table = '<table><tr><th>Имя</th><th>Оценки</th><th>Среднее</th></tr>';
+      students.forEach(s => {
+        table += `<tr><td>${s.name}</td><td>${s.grades.join(", ")}</td><td>${s.average}</td></tr>`;
+      });
+      table += '</table>';
+
+      const blob = new Blob([table], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ученики.xls";
+      a.click();
+    }
+  </script>
+</body>
+</html>
